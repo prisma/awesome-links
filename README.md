@@ -1,3 +1,3 @@
-# Awesome Links
+# Awesome Links - part-1
 
-The `main` branch is still a WIP. `part-x` branches are complete
+This branch has the same starting point as [this article](https://prisma.io/blog/fullstack-nextjs-graphql-prisma-oklidw1rhw)
