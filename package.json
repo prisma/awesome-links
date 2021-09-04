@@ -9,8 +9,12 @@
     "ts-node": "ts-node --compiler-options '{\"module\":\"CommonJS\"}'"
   },
   "dependencies": {
-    "@prisma/client": "^2.28.0",
+    "@apollo/client": "^3.4.8",
+    "@prisma/client": "^2.29.1",
+    "apollo-server-micro": "^3.1.2",
+    "graphql": "^15.5.1",
     "next": "11.0.1",
+    "nexus": "^1.1.0",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },
