@@ -63,7 +63,6 @@ export const LinksQuery = extendType({
         after: stringArg(),
       },
       async resolve(_, args, ctx) {
-        console.log("Hello world")
         let queryResults = null;
 
         if (args.after) {
@@ -73,16 +72,10 @@ export const LinksQuery = extendType({
             cursor: {
               id: args.after,
             },
-            // orderBy: {
-            //   index: "asc",
-            // },
           });
         } else {
           queryResults = await ctx.prisma.link.findMany({
             take: args.first,
-            // orderBy: {
-            //   index: "asc",
-            // },
           });
         }
 
@@ -98,9 +91,6 @@ export const LinksQuery = extendType({
             cursor: {
               id: myCursor,
             },
-            // orderBy: {
-            //   index: "asc",
-            // },
           });
 
           const result = {
