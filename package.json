@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "ts-node": "ts-node --compiler-options '{\"module\":\"CommonJS\"}'"
+    "start": "next start"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts --compiler-options '{\"module\":\"CommonJS\"}'"
   },
   "dependencies": {
-    "@prisma/client": "^2.28.0",
+    "@prisma/client": "^3.0.2",
     "next": "11.0.1",
     "react": "17.0.2",
     "react-dom": "17.0.2"
@@ -21,7 +23,7 @@
     "@types/react": "^17.0.14",
     "autoprefixer": "^10.3.1",
     "postcss": "^8.3.5",
-    "prisma": "^2.28.0",
+    "prisma": "^3.0.2",
     "tailwindcss": "^2.2.4",
     "typescript": "^4.3.5"
   }
