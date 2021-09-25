@@ -12,11 +12,11 @@ export const Link = objectType({
     t.string('category');
     t.list.field('users', {
       type: User,
-      async resolve(_parent, _args, ctx) {
+      async resolve(parent, _args, ctx) {
         return await ctx.prisma.link
           .findUnique({
             where: {
-              id: _parent.id,
+              id: parent.id,
             },
           })
           .users();
@@ -62,7 +62,7 @@ export const LinksQuery = extendType({
         first: intArg(),
         after: stringArg(),
       },
-      async resolve(_, args, ctx) {
+      async resolve(_parent, args, ctx) {
         let queryResults = null;
 
         if (args.after) {

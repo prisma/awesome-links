@@ -1,6 +1,6 @@
 import Head from 'next/head';
-import { gql, useQuery } from '@apollo/client';
 import { AwesomeLink } from '../components/AwesomeLink';
+import { gql, useQuery } from '@apollo/client';
 
 const AllLinksQuery = gql`
   query allLinksQuery($first: Int, $after: String) {
@@ -24,16 +24,16 @@ const AllLinksQuery = gql`
   }
 `;
 
-function Home() {
-  const { data, loading, error, fetchMore } = useQuery(AllLinksQuery, {
+export default function Home() {
+  const { data, error, loading, fetchMore } = useQuery(AllLinksQuery, {
     variables: { first: 2 },
   });
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Oh no... {error.message}</p>;
-  console.log(error);
+  if (loading) return <p>Loading......</p>;
 
-  const { endCursor, hasNextPage } = data.links.pageInfo;
+  if (error) return <p>Oops, something went wrong {error.message}</p>;
+
+  const { hasNextPage, endCursor } = data.links.pageInfo;
 
   return (
     <div>
@@ -81,5 +81,3 @@ function Home() {
     </div>
   );
 }
-
-export default Home;

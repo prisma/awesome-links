@@ -5,7 +5,6 @@ import Cors from 'micro-cors';
 
 const cors = Cors();
 
-
 const apolloServer = new ApolloServer({
   schema,
   context: createContext,
@@ -18,12 +17,12 @@ export default cors(async function handler(req, res) {
     res.end();
     return false;
   }
-
   await startServer;
+
   await apolloServer.createHandler({
     path: '/api/graphql',
   })(req, res);
-})
+});
 
 export const config = {
   api: {
