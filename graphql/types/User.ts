@@ -33,17 +33,18 @@ const Role = enumType({
 export const UserFavorites = extendType({
   type: 'Query',
   definition(t) {
-    t.field('favorites', {
+    t.list.field('favorites', {
       type: 'Link',
       async resolve(_, _args, ctx) {
-        const user = ctx.prisma.user.findUnique({
+        const user = await ctx.prisma.user.findUnique({
           where: {
-            email: 'abdelwahab@prisma.io',
+            email: ctx.user.email,
           },
           include: {
             favorites: true,
           },
         });
+        if (!user) throw new Error('Invalid user');
         return user.favorites;
       },
     });
@@ -59,14 +60,13 @@ export const BookmarkLink = extendType({
         id: stringArg(),
       },
       async resolve(_, args, ctx) {
-        console.log(ctx)
         const link = await ctx.prisma.link.findUnique({
           where: { id: args.id },
         });
 
         await ctx.prisma.user.update({
           where: {
-            email: 'abdelwahab@prisma.io',
+            email: ctx.user.email,
           },
           data: {
             favorites: {

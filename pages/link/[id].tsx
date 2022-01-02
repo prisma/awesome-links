@@ -3,7 +3,6 @@ import { prisma } from '../../lib/prisma';
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/dist/client/router';
 
 const BookmarkLinkMutation = gql`
   mutation ($id: String!) {
@@ -20,7 +19,6 @@ const BookmarkLinkMutation = gql`
 const Link = ({ link }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [createBookmark] = useMutation(BookmarkLinkMutation);
-  const router = useRouter();
 
   const bookmark = async () => {
     setIsLoading(true);
@@ -87,34 +85,4 @@ export const getServerSideProps = async ({ params }) => {
       link,
     },
   };
-
-  // const { data } = await client.query({
-  //   query: gql`
-  //     query ($id: String!) {
-  //       link(id: $id) {
-  //         id
-  //         title
-  //         description
-  //         category
-  //         url
-  //         imageUrl
-  //         isBookmarked
-  //       }
-  //     }
-  //   `,
-  //   variables: { id },
-  // });
-  // const { title, description, category, imageUrl, url, isBookmarked } = data;
-  // const link = {
-  //   id,
-  //   title,
-  //   description,
-  //   category,
-  //   imageUrl,
-  //   url,
-  //   isBookmarked,
-  // };
-  // return {
-  //   props: { link },
-  // };
 };

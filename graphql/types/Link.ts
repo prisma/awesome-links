@@ -1,4 +1,5 @@
-import { intArg, nonNull, objectType, stringArg, extendType } from 'nexus';
+import { nonNull, objectType, stringArg, extendType } from 'nexus';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 
 export const Link = objectType({
   name: 'Link',
@@ -14,102 +15,29 @@ export const Link = objectType({
   },
 });
 
-export const Edge = objectType({
-  name: 'Edges',
-  definition(t) {
-    t.string('cursor');
-    t.field('node', {
-      type: Link,
-    });
-  },
-});
-
-export const PageInfo = objectType({
-  name: 'PageInfo',
-  definition(t) {
-    t.string('endCursor');
-    t.boolean('hasNextPage');
-  },
-});
-
-export const Response = objectType({
-  name: 'Response',
-  definition(t) {
-    t.field('pageInfo', { type: PageInfo });
-    t.list.field('edges', {
-      type: Edge,
-    });
-  },
-});
-
 // get ALl Links
 export const LinksQuery = extendType({
   type: 'Query',
   definition(t) {
-    t.field('links', {
-      type: 'Response',
-      args: {
-        first: intArg(),
-        after: stringArg(),
-      },
-      async resolve(_, args, ctx) {
-        let queryResults = null;
-        if (args.after) {
-          queryResults = await ctx.prisma.link.findMany({
-            take: args.first,
-            skip: 1,
-            cursor: {
-              id: args.after,
-            },
-            orderBy: {
-              index: 'asc',
-            },
-          });
-        } else {
-          queryResults = await ctx.prisma.link.findMany({
-            take: args.first,
-            orderBy: {
-              index: 'asc',
-            },
-          });
-        }
+    t.connectionField('links', {
+      type: Link,
+      resolve: async (_, { after, first }, ctx) => {
+        const offset = after ? cursorToOffset(after) + 1 : 0;
+        if (isNaN(offset)) throw new Error('cursor is invalid');
 
-        if (queryResults.length > 0) {
-          // last element
-          const lastLinkInResults = queryResults[queryResults.length - 1];
-          // cursor we'll return
-          const myCursor = lastLinkInResults.id;
+        const [totalCount, items] = await Promise.all([
+          ctx.prisma.link.count(),
+          ctx.prisma.link.findMany({
+            take: first,
+            skip: offset,
+          }),
+        ]);
 
-          // queries after the cursor to check if we have nextPage
-          const secondQueryResults = await ctx.prisma.link.findMany({
-            take: args.first,
-            cursor: {
-              id: myCursor,
-            },
-            orderBy: {
-              index: 'asc',
-            },
-          });
-
-          const result = {
-            pageInfo: {
-              endCursor: myCursor,
-              hasNextPage: secondQueryResults.length >= args.first,
-            },
-            edges: queryResults.map((link) => ({
-              cursor: link.id,
-              node: link,
-            })),
-          };
-          return result;
-        }
-        return {
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          edges: [],
-        };
+        return connectionFromArraySlice(
+          items,
+          { first, after },
+          { sliceStart: offset, arrayLength: totalCount }
+        );
       },
     });
   },
@@ -147,11 +75,14 @@ export const CreateLinkMutation = extendType({
         description: nonNull(stringArg()),
       },
       async resolve(_parent, args, ctx) {
-        // const user = await ctx.prisma.user.findUnique({
-        //   where: {
-        //     id: ctx.user.id,
-        //   },
-        // });
+        const user = await ctx.prisma.user.findUnique({
+          where: {
+            email: ctx.user.email,
+          },
+        });
+         if (!user || user.role !== 'ADMIN') {
+          throw new Error(`You do not have permission to perform action`);
+        }
         const newLink = {
           title: args.title,
           url: args.url,
@@ -159,10 +90,6 @@ export const CreateLinkMutation = extendType({
           category: args.category,
           description: args.description,
         };
-
-        // if (user.role !== 'ADMIN') {
-        //   throw new Error(`You do not have permission to perform action`);
-        // }
 
         return await ctx.prisma.link.create({
           data: newLink,

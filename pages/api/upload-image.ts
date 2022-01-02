@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     });
     console.log(encodeURIComponent(req.query.file));
 
+    console.log(post)
     return res.status(200).json(post);
   } catch (error) {
     console.log(error);

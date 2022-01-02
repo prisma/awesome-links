@@ -28,14 +28,13 @@ const CreateLinkMutation = gql`
 `;
 
 const Admin = () => {
-  const [createLink] = useMutation(CreateLinkMutation);
+  const [createLink, { data, loading, error }] =
+    useMutation(CreateLinkMutation);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const [isCreating, setIsCreating] = useState(false);
-
   const uploadPhoto = async (e) => {
     const file = e.target.files[0];
     const filename = encodeURIComponent(file.name);
@@ -55,24 +54,21 @@ const Admin = () => {
       {
         loading: 'Uploading...',
         success: 'Image successfully uploaded!🎉',
-        error: 'Upload failed 😥 Please try again',
+        error: `Upload failed 😥 Please try again ${error}`,
       }
     );
   };
 
   const onSubmit = async (data) => {
-    setIsCreating(true);
     const { title, url, category, description, image } = data;
-    const imageUrl = `https://awesome-hidden-gems.s3.amazonaws.com/${image[0].name}`;
+    const imageUrl = `https://my-awesome-links-bucket.s3.amazonaws.com/${image[0].name}`;
     const variables = { title, url, category, description, imageUrl };
     try {
       toast.promise(createLink({ variables }), {
         loading: 'Creating new link..',
         success: 'Link successfully created!🎉',
-        error: 'Something went wrong 😥 Please try again',
+        error: `Something went wrong 😥 Please try again -  ${error}`,
       });
-
-      setIsCreating(false);
     } catch (error) {
       console.error(error);
     }
@@ -140,11 +136,11 @@ const Admin = () => {
         </label>
 
         <button
-          disabled={isCreating}
+          disabled={loading}
           type="submit"
           className="my-4 capitalize bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600"
         >
-          {isCreating ? (
+          {loading ? (
             <span className="flex items-center justify-center">
               <svg
                 className="w-6 h-6 animate-spin mr-1"
