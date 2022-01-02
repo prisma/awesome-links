@@ -2,11 +2,6 @@
 ### Do not make changes to this file directly
 
 
-type Edges {
-  cursor: String
-  node: Link
-}
-
 type Link {
   category: String
   description: String
@@ -18,6 +13,26 @@ type Link {
   userId: Int
 }
 
+type LinkConnection {
+  """
+  https://facebook.github.io/relay/graphql/connections.htm#sec-Edge-Types
+  """
+  edges: [LinkEdge]
+
+  """
+  https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
+  """
+  pageInfo: PageInfo!
+}
+
+type LinkEdge {
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Cursor"""
+  cursor: String!
+
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Node"""
+  node: Link
+}
+
 type Mutation {
   bookmarkLink(id: String): Link
   createLink(category: String!, description: String!, imageUrl: String!, title: String!, url: String!): Link!
@@ -25,20 +40,47 @@ type Mutation {
   updateLink(category: String, description: String, id: String, imageUrl: String, title: String, url: String): Link!
 }
 
+"""
+PageInfo cursor, as defined in https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
+"""
 type PageInfo {
+  """
+  The cursor corresponding to the last nodes in edges. Null if the connection is empty.
+  """
   endCursor: String
-  hasNextPage: Boolean
+
+  """
+  Used to indicate whether more edges exist following the set defined by the clients arguments.
+  """
+  hasNextPage: Boolean!
+
+  """
+  Used to indicate whether more edges exist prior to the set defined by the clients arguments.
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  The cursor corresponding to the first nodes in edges. Null if the connection is empty.
+  """
+  startCursor: String
 }
 
 type Query {
-  favorites: Link
+  favorites: [Link]
   link(id: String!): Link!
-  links(after: String, first: Int): Response
-}
+  links(
+    """Returns the elements in the list that come after the specified cursor"""
+    after: String
 
-type Response {
-  edges: [Edges]
-  pageInfo: PageInfo
+    """Returns the elements in the list that come before the specified cursor"""
+    before: String
+
+    """Returns the first n elements from the list."""
+    first: Int
+
+    """Returns the last n elements from the list."""
+    last: Int
+  ): LinkConnection
 }
 
 enum Role {
