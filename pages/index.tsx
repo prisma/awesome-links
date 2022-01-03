@@ -13,7 +13,6 @@ const AllLinksQuery = gql`
       edges {
         cursor
         node {
-          index
           imageUrl
           url
           title
