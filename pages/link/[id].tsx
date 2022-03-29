@@ -1,5 +1,5 @@
 import React from 'react';
-import { prisma } from '../../lib/prisma';
+import prisma from '../../lib/prisma';
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import toast, { Toaster } from 'react-hot-toast';
