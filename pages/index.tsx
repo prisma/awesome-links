@@ -1,10 +1,9 @@
-import Head from 'next/head';
-import { gql, useQuery } from '@apollo/client';
-import Link from 'next/link';
-import { AwesomeLink } from '../components/AwesomeLink';
+import { gql, useQuery } from "@apollo/client";
+import Head from "next/head";
+import { AwesomeLink } from "../components/AwesomeLink";
 
 const AllLinksQuery = gql`
-  query allLinksQuery($first: Int, $after: String) {
+  query allLinksQuery($first: Int, $after: Int) {
     links(first: $first, after: $after) {
       pageInfo {
         endCursor
@@ -13,12 +12,12 @@ const AllLinksQuery = gql`
       edges {
         cursor
         node {
-          imageUrl
-          url
-          title
-          category
-          description
           id
+          imageUrl
+          title
+          description
+          url
+          category
         }
       }
     }
@@ -27,13 +26,13 @@ const AllLinksQuery = gql`
 
 function Home() {
   const { data, loading, error, fetchMore } = useQuery(AllLinksQuery, {
-    variables: { first: 3 },
+    variables: { first: 2 },
   });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Oh no... {error.message}</p>;
 
-  const { endCursor, hasNextPage } = data?.links.pageInfo;
+  const { endCursor, hasNextPage } = data.links.pageInfo;
 
   return (
     <div>
@@ -41,21 +40,17 @@ function Home() {
         <title>Awesome Links</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="container mx-auto max-w-5xl my-20 px-5">
+      <div className="container mx-auto max-w-5xl my-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {data?.links.edges.map(({ node }, i) => (
-            <Link href={`/link/${node.id}`} key={i}>
-              <a>
-                <AwesomeLink
-                  title={node.title}
-                  category={node.category}
-                  url={node.url}
-                  id={node.id}
-                  description={node.description}
-                  imageUrl={node.imageUrl}
-                />
-              </a>
-            </Link>
+          {data?.links.edges.map(({ node }) => (
+            <AwesomeLink
+              title={node.title}
+              category={node.category}
+              url={node.url}
+              id={node.id}
+              description={node.description}
+              imageUrl={node.imageUrl}
+            />
           ))}
         </div>
         {hasNextPage ? (
@@ -64,6 +59,13 @@ function Home() {
             onClick={() => {
               fetchMore({
                 variables: { after: endCursor },
+                updateQuery: (prevResult, { fetchMoreResult }) => {
+                  fetchMoreResult.links.edges = [
+                    ...prevResult.links.edges,
+                    ...fetchMoreResult.links.edges,
+                  ];
+                  return fetchMoreResult;
+                },
               });
             }}
           >
@@ -71,7 +73,7 @@ function Home() {
           </button>
         ) : (
           <p className="my-10 text-center font-medium">
-            You've reached the end!
+            You've reached the end!{" "}
           </p>
         )}
       </div>
