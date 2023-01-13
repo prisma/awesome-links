@@ -1,4 +1,5 @@
 import React from 'react';
+
 interface Props {
   imageUrl: string;
   url: string;
