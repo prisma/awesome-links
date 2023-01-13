@@ -1,6 +1,14 @@
 import React from 'react';
+interface Props {
+  imageUrl: string;
+  url: string;
+  title: string;
+  category: string;
+  description: string;
+  id: string;
+}
 
-export const AwesomeLink = ({
+export const AwesomeLink: React.FC<Props> = ({
   imageUrl,
   url,
   title,
