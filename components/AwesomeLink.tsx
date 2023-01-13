@@ -6,7 +6,7 @@ interface Props {
   title: string;
   category: string;
   description: string;
-  id: string;
+  id: number;
 }
 
 export const AwesomeLink: React.FC<Props> = ({
