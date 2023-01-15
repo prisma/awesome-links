@@ -31,7 +31,6 @@ function Home() {
     variables: { first: 2 },
   });
 
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Oh no... {error.message}</p>;
 
