@@ -43,6 +43,7 @@ const Admin = () => {
     const data = await res.json()
     const formData = new FormData()
 
+    // @ts-ignore
     Object.entries({ ...data.fields, file }).forEach(([key, value]) => {
       // @ts-ignore
       formData.append(key, value)
