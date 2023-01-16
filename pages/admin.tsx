@@ -12,7 +12,7 @@ type FormValues = {
   url: string;
   category: string;
   description: string;
-  imageUrl: string;
+  image: FileList;
 }
 
 const CreateLinkMutation = gql`
