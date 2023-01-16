@@ -3,7 +3,7 @@ export const links = [
     category: "Open Source",
     description: "Fullstack React framework",
     id: 1,
-    imageUrl: "https://nextjs.org/static/twitter-cards/home.jpg",
+    imageUrl: "https://github.com/vercel.png",
     title: "Next.js",
     url: "https://nextjs.org",
   },
@@ -11,7 +11,7 @@ export const links = [
     category: "Open Source",
     description: "Next Generation ORM for TypeScript and JavaScript",
     id: 2,
-    imageUrl: "https://www.prisma.io/images/og-image.png",
+    imageUrl: "https://github.com/prisma.png",
 
     title: "Prisma",
     url: "https://prisma.io",
@@ -20,8 +20,7 @@ export const links = [
     category: "Open Source",
     description: "Utility-fist css framework",
     id: 3,
-    imageUrl:
-      "https://tailwindcss.com/_next/static/media/twitter-large-card.85c0ff9e455da585949ff0aa50981857.jpg",
+    imageUrl: "https://github.com/tailwindlabs.png",
     title: "TailwindCSS",
     url: "https://tailwindcss.com",
   },

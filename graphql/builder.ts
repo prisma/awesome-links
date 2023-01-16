@@ -22,5 +22,3 @@ builder.queryType({
     }),
   }),
 });
-
-// builder.mutationType({})
