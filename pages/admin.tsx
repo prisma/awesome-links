@@ -3,20 +3,19 @@ import React from 'react'
 import { type SubmitHandler, useForm } from 'react-hook-form'
 import { gql, useMutation } from '@apollo/client'
 import toast, { Toaster } from 'react-hot-toast'
-import { getSession } from '@auth0/nextjs-auth0'
-import prisma from '../lib/prisma'
 import type { GetServerSideProps } from 'next'
+import { getSession } from '@auth0/nextjs-auth0'
 
 type FormValues = {
   title: string;
   url: string;
   category: string;
   description: string;
-  imageUrl: string;
+  image: FileList;
 }
 
 const CreateLinkMutation = gql`
-  mutation createLink($title: String!, $url: String!, $imageUrl: String!, $category: String!, $description: String!) {
+  mutation($title: String!, $url: String!, $imageUrl: String!, $category: String!, $description: String!) {
     createLink(title: $title, url: $url, imageUrl: $imageUrl, category: $category, description: $description) {
       title
       url
@@ -28,20 +27,43 @@ const CreateLinkMutation = gql`
 `
 
 const Admin = () => {
+  const [createLink, { data, loading, error }] = useMutation(CreateLinkMutation)
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<FormValues>()
 
-  const [createLink, { loading, error }] = useMutation(CreateLinkMutation, {
-    onCompleted: () => reset()
-  })
+  // Upload photo function
+  const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length <= 0) return
+    const file = e.target.files[0]
+    const filename = encodeURIComponent(file.name)
+    const res = await fetch(`/api/upload-image?file=${filename}`)
+    const data = await res.json()
+    const formData = new FormData()
+
+    Object.entries({ ...data.fields, file }).forEach(([key, value]) => {
+      // @ts-ignore
+      formData.append(key, value)
+    })
+
+    toast.promise(
+      fetch(data.url, {
+        method: 'POST',
+        body: formData,
+      }),
+      {
+        loading: 'Uploading...',
+        success: 'Image successfully uploaded!🎉',
+        error: `Upload failed 😥 Please try again ${error}`,
+      },
+    )
+  }
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const { title, url, category, description } = data
-    const imageUrl = `https://via.placeholder.com/300`
+    const { title, url, category, description, image } = data
+    const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${image[0]?.name}`
     const variables = { title, url, category, description, imageUrl }
     try {
       toast.promise(createLink({ variables }), {
@@ -49,7 +71,6 @@ const Admin = () => {
         success: 'Link successfully created!🎉',
         error: `Something went wrong 😥 Please try again -  ${error}`,
       })
-
     } catch (error) {
       console.error(error)
     }
@@ -98,6 +119,16 @@ const Admin = () => {
             name="category"
             type="text"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </label>
+        <label className="block">
+          <span className="text-gray-700">Upload a .png or .jpg image (max 1MB).</span>
+          <input
+            {...register('image', { required: true })}
+            onChange={uploadPhoto}
+            type="file"
+            accept="image/png, image/jpeg"
+            name="image"
           />
         </label>
 
