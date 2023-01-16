@@ -17,7 +17,7 @@ const BookmarkLinkMutation = gql`
   }
 `;
 
-function Link({ link }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+const Link = ({ link }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [isLoading, setIsLoading] = useState(false);
   const [createBookmark] = useMutation(BookmarkLinkMutation);
 
