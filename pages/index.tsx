@@ -28,13 +28,13 @@ const AllLinksQuery = gql`
 
 function Home() {
   const { data, loading, error, fetchMore } = useQuery(AllLinksQuery, {
-    variables: { first: 2 },
+    variables: { first: 3 },
   });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Oh no... {error.message}</p>;
 
-  const { endCursor, hasNextPage } = data.links.pageInfo;
+  const { endCursor, hasNextPage } = data?.links.pageInfo;
 
   return (
     <div>
@@ -62,13 +62,6 @@ function Home() {
             onClick={() => {
               fetchMore({
                 variables: { after: endCursor },
-                updateQuery: (prevResult, { fetchMoreResult }) => {
-                  fetchMoreResult.links.edges = [
-                    ...prevResult.links.edges,
-                    ...fetchMoreResult.links.edges,
-                  ];
-                  return fetchMoreResult;
-                },
               });
             }}
           >
