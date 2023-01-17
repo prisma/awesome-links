@@ -1,30 +1,16 @@
-import { enumType, objectType } from 'nexus';
-import { Link } from './Link';
+// /graphql/types/User.ts
+import { builder } from "../builder";
 
-export const User = objectType({
-  name: 'User',
-  definition(t) {
-    t.string('id');
-    t.string('name');
-    t.string('email');
-    t.string('image');
-    t.field('role', { type: Role });
-    t.list.field('bookmarks', {
-      type: Link,
-      async resolve(parent, _args, ctx) {
-        return await ctx.prisma.user
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .bookmarks();
-      },
-    });
-  },
-});
+builder.prismaObject('User', {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    email: t.exposeString('email', { nullable: true, }),
+    image: t.exposeString('image', { nullable: true, }),
+    role: t.expose('role', { type: Role, }),
+    bookmarks: t.relation('bookmarks'),
+  })
+})
 
-const Role = enumType({
-  name: 'Role',
-  members: ['USER', 'ADMIN'],
-});
+const Role = builder.enumType('Role', {
+  values: ['USER', 'ADMIN'] as const,
+})

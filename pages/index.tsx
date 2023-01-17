@@ -1,9 +1,11 @@
-import { gql, useQuery } from "@apollo/client";
+// /pages/index.tsx
 import Head from "next/head";
+import { gql, useQuery, useMutation } from "@apollo/client";
 import { AwesomeLink } from "../components/AwesomeLink";
+import type { Link } from "@prisma/client";
 
 const AllLinksQuery = gql`
-  query allLinksQuery($first: Int, $after: Int) {
+  query allLinksQuery($first: Int, $after: ID) {
     links(first: $first, after: $after) {
       pageInfo {
         endCursor
@@ -12,12 +14,12 @@ const AllLinksQuery = gql`
       edges {
         cursor
         node {
-          id
           imageUrl
-          title
-          description
           url
+          title
           category
+          description
+          id
         }
       }
     }
@@ -42,7 +44,7 @@ function Home() {
       </Head>
       <div className="container mx-auto max-w-5xl my-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {data?.links.edges.map(({ node }) => (
+          {data?.links.edges.map(({ node }: { node: Link }) => (
             <AwesomeLink
               title={node.title}
               category={node.category}
