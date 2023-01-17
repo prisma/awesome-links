@@ -1,17 +1,17 @@
-import { PrismaClient } from '@prisma/client';
-import prisma from '../lib/prisma';
-import { Claims, getSession } from '@auth0/nextjs-auth0';
+// graphql/context.ts
+import {  getSession } from '@auth0/nextjs-auth0'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
-export type Context = {
-  user: Claims;
-  accessToken: string;
-  prisma: PrismaClient;
-};
-export async function createContext({ req, res }): Promise<Context> {
-  const { user, accessToken } = getSession(req, res);
+export async function createContext({ req, res }: { req: NextApiRequest, res: NextApiResponse }) {
+  const session = await getSession(req, res)
+
+  // if the user is not logged in, return null
+  if (!session || typeof session === 'undefined') return {}
+
+  const { user, accessToken } = session
+
   return {
     user,
     accessToken,
-    prisma,
-  };
+  }
 }

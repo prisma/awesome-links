@@ -1,83 +1,38 @@
-import { enumType, intArg, objectType, stringArg } from 'nexus';
-import { extendType } from 'nexus';
-import { Link } from './Link';
+// /graphql/types/User.ts
+import { builder } from "../builder";
 
-export const User = objectType({
-  name: 'User',
-  definition(t) {
-    t.string('id');
-    t.string('name');
-    t.string('email');
-    t.string('image');
-    t.field('role', { type: Role });
-    t.list.field('favorites', {
-      type: Link,
-      async resolve(_parent, _args, ctx) {
-        return await ctx.prisma.user
-          .findUnique({
-            where: {
-              id: _parent.id,
-            },
-          })
-          .favorites();
-      },
-    });
-  },
-});
+builder.prismaObject('User', {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    email: t.exposeString('email', { nullable: true, }),
+    image: t.exposeString('image', { nullable: true, }),
+    role: t.expose('role', { type: Role, }),
+    bookmarks: t.relation('bookmarks'),
+  })
+})
 
-const Role = enumType({
-  name: 'Role',
-  members: ['USER', 'ADMIN'],
-});
+const Role = builder.enumType('Role', {
+  values: ['USER', 'ADMIN'] as const,
+})
 
-export const UserFavorites = extendType({
-  type: 'Query',
-  definition(t) {
-    t.list.field('favorites', {
-      type: 'Link',
-      async resolve(_, _args, ctx) {
-        const user = await ctx.prisma.user.findUnique({
-          where: {
-            email: ctx.user.email,
-          },
-          include: {
-            favorites: true,
-          },
-        });
-        if (!user) throw new Error('Invalid user');
-        return user.favorites;
-      },
-    });
-  },
-});
+builder.queryField('favorites', (t) =>
+  t.prismaField({
+    type: 'User',
+    resolve: async (query, _parent, _args, ctx) => {
+      if (!(await ctx).user) {
+        throw new Error("You have to be logged in to perform this action")
+      }
 
-export const BookmarkLink = extendType({
-  type: 'Mutation',
-  definition(t) {
-    t.field('bookmarkLink', {
-      type: 'Link',
-      args: {
-        id: stringArg(),
-      },
-      async resolve(_, args, ctx) {
-        const link = await ctx.prisma.link.findUnique({
-          where: { id: args.id },
-        });
+      const user = await prisma.user.findUnique({
+        ...query,
+        where: {
+          email: (await ctx).user?.email,
+        }
+      })
 
-        await ctx.prisma.user.update({
-          where: {
-            email: ctx.user.email,
-          },
-          data: {
-            favorites: {
-              connect: {
-                id: link.id,
-              },
-            },
-          },
-        });
-        return link;
-      },
-    });
-  },
-});
+      if (!user) throw Error('User does not exist');
+
+      return user
+    }
+  })
+)

@@ -1,25 +1,23 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { gql, useMutation } from '@apollo/client';
-import toast, { Toaster } from 'react-hot-toast';
-import { getSession } from '@auth0/nextjs-auth0';
-import prisma from '../lib/prisma';
+// pages/admin.tsx
+import React from 'react'
+import { type SubmitHandler, useForm } from 'react-hook-form'
+import { gql, useMutation } from '@apollo/client'
+import toast, { Toaster } from 'react-hot-toast'
+import { getSession } from '@auth0/nextjs-auth0'
+import prisma from '../lib/prisma'
+import type { GetServerSideProps } from 'next'
+
+type FormValues = {
+  title: string;
+  url: string;
+  category: string;
+  description: string;
+  image: FileList;
+}
 
 const CreateLinkMutation = gql`
-  mutation (
-    $title: String!
-    $url: String!
-    $imageUrl: String!
-    $category: String!
-    $description: String!
-  ) {
-    createLink(
-      title: $title
-      url: $url
-      imageUrl: $imageUrl
-      category: $category
-      description: $description
-    ) {
+  mutation createLink($title: String!, $url: String!, $imageUrl: String!, $category: String!, $description: String!) {
+    createLink(title: $title, url: $url, imageUrl: $imageUrl, category: $category, description: $description) {
       title
       url
       imageUrl
@@ -27,47 +25,48 @@ const CreateLinkMutation = gql`
       description
     }
   }
-`;
+`
 
 const Admin = () => {
-  const [createLink, { data, loading, error }] =
-    useMutation(CreateLinkMutation);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+    reset,
+  } = useForm<FormValues>()
 
-  const onSubmit = async (data) => {
-    const { title, url, category, description, image } = data;
-    const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${image[0].name}`;
-    const variables = { title, url, category, description, imageUrl };
+  const [createLink, { loading, error }] = useMutation(CreateLinkMutation, {
+    onCompleted: () => reset()
+  })
+
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    const { title, url, category, description } = data
+    const imageUrl = `https://via.placeholder.com/300`
+    const variables = { title, url, category, description, imageUrl }
     try {
       toast.promise(createLink({ variables }), {
         loading: 'Creating new link..',
         success: 'Link successfully created!🎉',
         error: `Something went wrong 😥 Please try again -  ${error}`,
-      });
+      })
+
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto max-w-md py-12">
       <Toaster />
       <h1 className="text-3xl font-medium my-5">Create a new link</h1>
-      <form
-        className="grid grid-cols-1 gap-y-6 shadow-lg p-8 rounded-lg"
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      <form className="grid grid-cols-1 gap-y-6 shadow-lg p-8 rounded-lg" onSubmit={handleSubmit(onSubmit)}>
         <label className="block">
           <span className="text-gray-700">Title</span>
           <input
             placeholder="Title"
+            {...register('title', { required: true })}
             name="title"
             type="text"
-            {...register('title', { required: true })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </label>
@@ -125,13 +124,13 @@ const Admin = () => {
         </button>
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default Admin;
+export default Admin
 
-export const getServerSideProps = async ({ req, res }) => {
-  const session = getSession(req, res);
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getSession(req, res);
 
   if (!session) {
     return {
@@ -153,7 +152,7 @@ export const getServerSideProps = async ({ req, res }) => {
     },
   });
 
-  if (user.role !== 'ADMIN') {
+  if (!user || user.role !== 'ADMIN') {
     return {
       redirect: {
         permanent: false,

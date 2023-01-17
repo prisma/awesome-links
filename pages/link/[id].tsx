@@ -3,9 +3,10 @@ import prisma from '../../lib/prisma';
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import toast, { Toaster } from 'react-hot-toast';
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
 const BookmarkLinkMutation = gql`
-  mutation ($id: String!) {
+  mutation ($id: ID!) {
     bookmarkLink(id: $id) {
       title
       url
@@ -16,7 +17,7 @@ const BookmarkLinkMutation = gql`
   }
 `;
 
-const Link = ({ link }) => {
+const Link = ({ link }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [isLoading, setIsLoading] = useState(false);
   const [createBookmark] = useMutation(BookmarkLinkMutation);
 
@@ -67,10 +68,12 @@ const Link = ({ link }) => {
 
 export default Link;
 
-export const getServerSideProps = async ({ params }) => {
-  const id = params.id;
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const id = params?.id;
   const link = await prisma.link.findUnique({
-    where: { id },
+    where: {
+      id: Number(id)
+    },
     select: {
       id: true,
       title: true,
@@ -80,6 +83,11 @@ export const getServerSideProps = async ({ params }) => {
       description: true,
     },
   });
+
+  if (!link) return {
+    notFound: true
+  }
+
   return {
     props: {
       link,

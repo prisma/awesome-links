@@ -7,30 +7,33 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Link {
-  id          String   @id @default(uuid())
-  index       Int      @default(autoincrement())
-  title       String
-  description String
-  url         String
-  imageUrl    String
-  category    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  users       User[]
+generator pothos {
+  provider = "prisma-pothos-types"
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String?  @unique
-  image     String?
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  favorites Link[]
+  email     String?  @unique
+  image     String?
   role      Role     @default(USER)
+  bookmarks Link[]
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+model Link {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  description String
+  url         String
+  imageUrl    String
+  category    String
+  users       User[]
 }
