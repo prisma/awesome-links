@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { gql, useMutation } from '@apollo/client';
-import toast, { Toaster } from 'react-hot-toast';
+// pages/admin.tsx
+import React from 'react'
+import { type SubmitHandler, useForm } from 'react-hook-form'
+import { gql, useMutation } from '@apollo/client'
+import toast, { Toaster } from 'react-hot-toast'
+import type { GetServerSideProps } from 'next'
+import { getSession } from '@auth0/nextjs-auth0'
+
+type FormValues = {
+  title: string;
+  url: string;
+  category: string;
+  description: string;
+  image: FileList;
+}
 
 const CreateLinkMutation = gql`
-  mutation (
-    $title: String!
-    $url: String!
-    $imageUrl: String!
-    $category: String!
-    $description: String!
-  ) {
-    createLink(
-      title: $title
-      url: $url
-      imageUrl: $imageUrl
-      category: $category
-      description: $description
-    ) {
+  mutation($title: String!, $url: String!, $imageUrl: String!, $category: String!, $description: String!) {
+    createLink(title: $title, url: $url, imageUrl: $imageUrl, category: $category, description: $description) {
       title
       url
       imageUrl
@@ -25,27 +24,30 @@ const CreateLinkMutation = gql`
       description
     }
   }
-`;
+`
 
 const Admin = () => {
-  const [createLink, { data, loading, error }] =
-    useMutation(CreateLinkMutation);
+  const [createLink, { data, loading, error }] = useMutation(CreateLinkMutation)
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
-  const uploadPhoto = async (e) => {
-    const file = e.target.files[0];
-    const filename = encodeURIComponent(file.name);
-    const res = await fetch(`/api/upload-image?file=${filename}`);
-    const data = await res.json();
-    const formData = new FormData();
+  } = useForm<FormValues>()
+
+  // Upload photo function
+  const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length <= 0) return
+    const file = e.target.files[0]
+    const filename = encodeURIComponent(file.name)
+    const res = await fetch(`/api/upload-image?file=${filename}`)
+    const data = await res.json()
+    const formData = new FormData()
 
     // @ts-ignore
     Object.entries({ ...data.fields, file }).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
+      // @ts-ignore
+      formData.append(key, value)
+    })
 
     toast.promise(
       fetch(data.url, {
@@ -56,40 +58,37 @@ const Admin = () => {
         loading: 'Uploading...',
         success: 'Image successfully uploaded!🎉',
         error: `Upload failed 😥 Please try again ${error}`,
-      }
-    );
-  };
+      },
+    )
+  }
 
-  const onSubmit = async (data) => {
-    const { title, url, category, description, image } = data;
-    const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${image[0].name}`;
-    const variables = { title, url, category, description, imageUrl };
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    const { title, url, category, description, image } = data
+    const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${image[0]?.name}`
+    const variables = { title, url, category, description, imageUrl }
     try {
       toast.promise(createLink({ variables }), {
         loading: 'Creating new link..',
         success: 'Link successfully created!🎉',
         error: `Something went wrong 😥 Please try again -  ${error}`,
-      });
+      })
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto max-w-md py-12">
       <Toaster />
       <h1 className="text-3xl font-medium my-5">Create a new link</h1>
-      <form
-        className="grid grid-cols-1 gap-y-6 shadow-lg p-8 rounded-lg"
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      <form className="grid grid-cols-1 gap-y-6 shadow-lg p-8 rounded-lg" onSubmit={handleSubmit(onSubmit)}>
         <label className="block">
           <span className="text-gray-700">Title</span>
           <input
             placeholder="Title"
+            {...register('title', { required: true })}
             name="title"
             type="text"
-            {...register('title', { required: true })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </label>
@@ -124,9 +123,7 @@ const Admin = () => {
           />
         </label>
         <label className="block">
-          <span className="text-gray-700">
-            Upload a .png or .jpg image (max 1MB).
-          </span>
+          <span className="text-gray-700">Upload a .png or .jpg image (max 1MB).</span>
           <input
             {...register('image', { required: true })}
             onChange={uploadPhoto}
@@ -159,7 +156,45 @@ const Admin = () => {
         </button>
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default Admin;
+export default Admin
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getSession(req, res);
+
+  if (!session) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: '/api/auth/login',
+      },
+      props: {},
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    select: {
+      email: true,
+      role: true,
+    },
+    where: {
+      email: session.user.email,
+    },
+  });
+
+  if (!user || user.role !== 'ADMIN') {
+    return {
+      redirect: {
+        permanent: false,
+        destination: '/404',
+      },
+      props: {},
+    };
+  }
+
+  return {
+    props: {},
+  };
+};
