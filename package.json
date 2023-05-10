@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "vercel-build": "npx prisma generate --data-proxy && next build"
   },
   "dependencies": {
     "@apollo/client": "3.7.4",
@@ -14,6 +15,7 @@
     "@pothos/plugin-prisma": "3.40.0",
     "@pothos/plugin-relay": "3.32.0",
     "@prisma/client": "^4.8.1",
+    "aws-sdk": "^2.1375.0",
     "graphql": "16.6.0",
     "graphql-yoga": "3.3.0",
     "next": "^13.1.2",
